@@ -45,12 +45,14 @@ Open Scope cat.
 (*I'm not sure why Coq fails to infer this, so let's be explicit...*)
 Notation "f · g" := (compose (C:=F_data) f g).
 
-Definition F_left_comp (n m : nat) (f : F_mor n m) : (F_identity n) · f = f.
+Definition F_left_comp (n m : nat) (f : F_mor n m) : 
+  (F_identity n) · f = f.
 Proof.
   apply idpath.
 Defined.
 
-Definition F_right_comp (n m : nat) (f : F_mor n m) : f · (F_identity m) = f.
+Definition F_right_comp (n m : nat) (f : F_mor n m) : 
+  f · (F_identity m) = f.
 Proof.
   apply idpath.
 Defined.
@@ -83,37 +85,38 @@ Definition F : category := category_pair F_pre F_has_homsets.
 
 (* We define the coproduct inclusions in F *)
 
-Lemma q {n m} (P : n > m) : S n > m.
+Lemma m_lt_sn {n m} (P : n > m) : S n > m.
 Proof.
   apply (istransnatgth (S n) (S m) m).
-  simpl.
-  simpl in P.
-  assumption.
-  exact (natgthsnn m).
+  + cbn.
+    assumption.
+  + exact (natgthsnn m).
 Defined.
 
 Lemma x_lt_nm {n m x : nat} (p : n > x) : (n + m) > x.
 Proof.
   induction m.
-  rewrite natplusr0.
-  assumption.
-
-  rewrite natplusnsm.
-  exact (q IHm).
+  + rewrite natplusr0.
+    assumption.
+  + rewrite natplusnsm.
+  exact (m_lt_sn IHm).
 Defined.
 
 Lemma xn_lt_nm {n m x : nat} (p : m > x) : (n + m) > (n + x).
 Proof.
   induction n.
-  rewrite !natplusl0.
-  assumption.
-  simpl.
-  simpl in IHn.
-  assumption.
+  + rewrite !natplusl0.
+    assumption.
+  + cbn.
+    cbn in IHn.
+    assumption.
 Defined.
 
-Definition F_inc1 (n m : nat) : F_mor n (n+m) := (fun x => tpair _ (pr1 x) (x_lt_nm (pr2 x))).
-Definition F_inc2 (n m : nat) : F_mor m (n+m) := (fun x => tpair _ (n + (pr1 x)) (xn_lt_nm (pr2 x))).
+Definition F_inc1 (n m : nat) : F_mor n (n+m) := 
+  (fun x => tpair _ (pr1 x) (x_lt_nm (pr2 x))).
+
+Definition F_inc2 (n m : nat) : F_mor m (n+m) := 
+  (fun x => tpair _ (n + (pr1 x)) (xn_lt_nm (pr2 x))).
 
 Lemma t (b : nat) : ∏ a : nat, b>=a -> a + (b - a) = b.
 Proof.
@@ -150,13 +153,17 @@ Proof.
   assumption.
 Defined.
 
-Definition F_coprod_rect (k n m : nat) (f : F_mor n k) (g : F_mor m k) : F_mor (n+m) k :=
-  fun (x : stn (n+m)) => 
-    coprod_rect 
-      (fun _ => stn k)
-      (fun p =>  f (tpair _ (pr1 x) p))
-      (fun p =>  g (tpair _ ((pr1 x) - n) (r n m (pr1 x) p (pr2 x))))
-      (natlthorgeh (pr1 x) n).
+Definition F_coprod_rect 
+  (k n m : nat) (f : F_mor n k) (g : F_mor m k) : 
+  F_mor (n+m) k :=
+    fun (x : stn (n+m)) => 
+      coprod_rect 
+        (fun _ => stn k)
+        (fun p =>  f (tpair _ (pr1 x) p))
+        (fun p =>  g (tpair _ ((pr1 x) - n) (r n m (pr1 x) p (pr2 x))))
+        (natlthorgeh (pr1 x) n).
+
+Check natlthorgeh.
 
 Lemma eqfuneqatpoint (A B : UU) (x : A) (f g : A -> B) (p : f = g) : f x = g x.
 Proof.
@@ -275,12 +282,13 @@ Definition LT_T (LT : LT_data) : category := pr1 LT.
 Definition LT_L (LT : LT_data) : functor F (LT_T LT) := pr2 LT.
 
 (*The coercion here could be automatic but I don't trust it*)
-Definition LT_bij_on_objects (LT : LT_data) := isweq (functor_on_objects (LT_L LT)).
+Definition LT_bij_on_objects (LT : LT_data) := 
+  isweq (functor_on_objects (LT_L LT)).
 
 Definition LT_L0_initial (LT : LT_data) := isInitial (LT_T LT) (LT_L LT 0).
 
-Definition LT_has_coprods (LT : LT_data)
-  := ∏ n m : nat, 
+Definition LT_has_coprods (LT : LT_data) := 
+  ∏ n m : nat, 
     isBinCoproduct 
       (LT_T LT)
       (LT_L LT n)
@@ -328,6 +336,8 @@ Definition LT_mor_data (A B : LT) := functor (LT_T A) (LT_T B).
 Definition is_LT_mor (A B : LT) (G : LT_mor_data A B) := 
   functor_composite (LT_L A) G = (LT_L B).
 
+Definition LT_mor (A B : LT) := total2 (fun mor_data => is_LT_mor A B mor_data).
+
 Lemma LT_ob_set (A : LT) : isaset (LT_T A).
 Proof.
   apply (isofhlevelweqf 2 (X:=nat)).
@@ -347,8 +357,6 @@ Proof.
     unfold is_LT_mor.
     exact (X (LT_L A ∙ G) (LT_L B)).
 Defined.
-
-Definition LT_mor (A B : LT) := total2 (fun mor_data => is_LT_mor A B mor_data).
 
 Definition LT_cat_ob_mor := precategory_ob_mor_pair LT LT_mor.
 
@@ -375,7 +383,8 @@ Proof.
     apply idpath.
 Defined.
 
-Definition LT_cat_data : precategory_data := precategory_data_pair LT_cat_ob_mor LT_cat_identity LT_cat_composition.
+Definition LT_cat_data : precategory_data := 
+  precategory_data_pair LT_cat_ob_mor LT_cat_identity LT_cat_composition.
 
 Definition LT_cat_is_precategory : is_precategory LT_cat_data.
 Proof.
@@ -414,10 +423,8 @@ Proof.
     - exact (homset_property (LT_T B)).
     - apply (LT_ob_set B).
   + intros F.
-    assert (isofhlevel 1 (is_LT_mor A B F)).
-    - apply is_LT_mor_prop.
-    - apply hlevelntosn.
-      assumption.
+    apply hlevelntosn.
+    apply is_LT_mor_prop.
 Defined.
 
 Definition LT_cat : category := category_pair LT_precat LT_cat_has_homsets.
