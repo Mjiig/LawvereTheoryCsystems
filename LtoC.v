@@ -7,7 +7,8 @@ Open Scope cat.
 Section LtoC.
 Variable (lt : LT).
 
-Definition homset_opp (C : precategory) ( p : has_homsets C) : has_homsets (opp_precat C).
+Definition homset_opp (C : precategory) ( p : has_homsets C) :
+  has_homsets (opp_precat C).
 Proof.
     unfold has_homsets.
     intros.
@@ -74,7 +75,8 @@ Proof.
 Defined.
 
 Definition general_coprod (n m c : nat) (p : n+m = c) : 
-  ∑inc: ((L n)-->(L c))×((L m)-->(L c)), isBinCoproduct T (L n) (L m) (L c) (pr1 inc) (pr2 inc).
+  ∑inc: ((L n)-->(L c))×((L m)-->(L c)),
+    isBinCoproduct T (L n) (L m) (L c) (pr1 inc) (pr2 inc).
 Proof.
   pose (d:=LT_coprods lt n m).
   destruct p.
@@ -126,11 +128,11 @@ Defined.
 Definition ll_destruct (X : T) : (ll X = 0) ⨿ (ll X > 0).
 Proof.
   pose (p := natchoice0 (ll X)).
-  destruct p.
+  destruct p as [eq | gt].
   + left.
-    exact (!p).
+    exact (!eq).
   + right.
-    assumption.
+    exact gt.
 Defined.
 
 Definition p (X : T) : ft X --> X.
@@ -142,7 +144,7 @@ Proof.
     exact (BinCoproductIn1 T coprod).
 Defined.
 
-Definition p2 (X : T) (gt0 : ll X > 0) : T ⟦ L 1, X ⟧.
+Definition p2 (X : T) (gt0 : ll X > 0) : L 1 --> X.
 Proof.
   pose (coprod := x_coprod X gt0).
   exact (BinCoproductIn2 T coprod).
@@ -390,11 +392,7 @@ Proof.
           + unfold C0ax5a_type.
             cbn.
             intros.
-            unfold child.
-            unfold ll.
-            rewrite LT_L_cancel.
-            rewrite <- succ_is_plus_1.
-            apply natgthsn0.
+            apply ll_child_gt0.
           + use tpair.
             - unfold C0ax5b_type.
               cbn.
@@ -407,8 +405,8 @@ Proof.
               unfold C0ax5b_mor.
               cbn.
               unfold q.
-              unfold child_proj, emor, emor'.
               rewrite (p_inc X gt0).
+              unfold child_proj, emor, emor'.
               rewrite (BinCoproductIn1Commutes T (ft X) (L 1) (x_coprod X gt0)).
               rewrite assoc.
               apply idpath.
@@ -520,6 +518,7 @@ Proof.
         rewrite <- p2_inc.
         rewrite (q_continues_p2 X Y gt0 f).
         rewrite <- assoc.
+        unfold T in *.
         rewrite tk.
         apply idpath.
     - cbn.
